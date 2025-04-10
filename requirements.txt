@@ -1,2 +1,3 @@
-pyTelegranbotAPI
+pyTelegramBotAPI
+python-dotenv
 openai
