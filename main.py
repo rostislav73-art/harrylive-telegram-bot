@@ -41,3 +41,6 @@ def telegram_webhook():
 @app.route("/", methods=["GET"])
 def index():
     return "✅ HarryLive Telegram Bot is running!", 200
+if __name__ == "__main__" and os.environ.get("RAILWAY_STATIC_URL") is None:
+    print("🚀 Running Flask locally...")
+    app.run(host="0.0.0.0", port=5000)
