@@ -48,6 +48,7 @@ def index():
     return "✅ HarryLive Telegram Bot is running!", 200
 
 # Стартиране на Flask и локално, и в Railway
-if __name__ == "__main__" or os.environ.get("RAILWAY_STATIC_URL"):
-    print("🚀 Starting Flask app...")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+if __name__ == "__main__":
+    print("🚀 Running Flask locally...")
+    app.run(host="0.0.0.0", port=5000)
+
