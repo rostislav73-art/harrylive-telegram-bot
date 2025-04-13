@@ -14,7 +14,6 @@ if not BOT_TOKEN:
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-# ✅ Фикснат webhook URL
 webhook_url = f"{RAILWAY_STATIC_URL}/{BOT_TOKEN}"
 bot.remove_webhook()
 bot.set_webhook(url=webhook_url)
@@ -41,7 +40,7 @@ def telegram_webhook():
 @app.route("/", methods=["GET"])
 def index():
     return "✅ HarryLive Telegram Bot is running!", 200
+
 if __name__ == "__main__" and os.environ.get("RAILWAY_STATIC_URL") is None:
     print("🚀 Running Flask locally...")
     app.run(host="0.0.0.0", port=5000)
-    app = app
