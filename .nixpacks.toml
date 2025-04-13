@@ -2,4 +2,4 @@
 cmds = []
 
 [start]
-cmd = "gunicorn main:app"
+cmd = "python main.py"
