@@ -1,20 +1,20 @@
 import os
 import telebot
+import openai
 from flask import Flask, request
 from dotenv import load_dotenv
-import openai
 
 # Зареждане на .env променливите
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RAILWAY_STATIC_URL = os.getenv("RAILWAY_STATIC_URL")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-if not BOT_TOKEN or not OPENAI_API_KEY:
-    raise ValueError("❌ BOT_TOKEN или OPENAI_API_KEY не са зададени като среда (environment variables)")
-
-openai.api_key = OPENAI_API_KEY
+if not BOT_TOKEN:
+    raise ValueError("❌ BOT_TOKEN is not set in environment variables")
+if not openai.api_key:
+    raise ValueError("❌ OPENAI_API_KEY is not set in environment variables")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
@@ -28,24 +28,26 @@ print("✅ Webhook set to:", webhook_url)
 # Handler за /start
 @bot.message_handler(commands=["start"])
 def start(message):
-    bot.send_message(message.chat.id, "👋 Здрасти! Аз съм HarryLiveBot_73 — готов съм да говоря с теб!")
+    bot.send_message(message.chat.id, "👋 Здрасти! Аз съм HarryLiveBot_73 – готов съм да говоря с теб!")
 
-# Echo handler – изпраща към GPT-4 Turbo
+# GPT handler – изпраща съобщение към OpenAI
 @bot.message_handler(func=lambda message: True)
-def echo(message):
+def gpt_handler(message):
     try:
+        user_input = message.text
         response = openai.ChatCompletion.create(
             model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "Ти си помощник в Telegram и отговаряш учтиво и ясно."},
-                {"role": "user", "content": message.text}
+                {"role": "system", "content": "Ти си полезен асистент в Telegram."},
+                {"role": "user", "content": user_input}
             ]
         )
-        gpt_reply = response['choices'][0]['message']['content']
-        bot.send_message(message.chat.id, gpt_reply)
+        reply = response["choices"][0]["message"]["content"]
+        bot.send_message(message.chat.id, reply)
+
     except Exception as e:
-        print("⚠️ GPT Error:", e)
-        bot.send_message(message.chat.id, "❌ Възникна грешка при връзката с GPT.")
+        bot.send_message(message.chat.id, "⚠️ Възникна грешка при отговора от GPT.")
+        print("❌ Error:", e)
 
 # Webhook endpoint – получава съобщения от Telegram
 @app.route(f"/{BOT_TOKEN}", methods=["POST"])
@@ -55,12 +57,7 @@ def telegram_webhook():
     bot.process_new_updates([update])
     return "", 200
 
-# Проверка дали Flask работи
+# Проверка дали Flask работи (GET)
 @app.route("/", methods=["GET"])
 def index():
     return "✅ HarryLive Telegram Bot is running!", 200
-
-# Стартиране на Flask
-if __name__ == "__main__" or os.environ.get("RAILWAY_STATIC_URL"):
-    print("🚀 Starting Flask app...")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
