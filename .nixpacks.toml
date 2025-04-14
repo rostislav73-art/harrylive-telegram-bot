@@ -3,3 +3,5 @@ cmds = []
 
 [start]
 cmd = "gunicorn main:app --bind 0.0.0.0:$PORT"
+[variables]
+NIXPACKS_NO_CACHE = "true"
