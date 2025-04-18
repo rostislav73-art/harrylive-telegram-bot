@@ -25,12 +25,12 @@ bot.remove_webhook()
 bot.set_webhook(url=webhook_url)
 print("✅ Webhook set to:", webhook_url)
 
-# Handler за /start
+# /start handler
 @bot.message_handler(commands=["start"])
 def start(message):
     bot.send_message(message.chat.id, "👋 Здрасти! Аз съм HarryLiveBot_73 – готов съм да говоря с теб!")
 
-# GPT handler – изпраща съобщение към OpenAI
+# GPT хендлър
 @bot.message_handler(func=lambda message: True)
 def gpt_handler(message):
     try:
@@ -44,12 +44,11 @@ def gpt_handler(message):
         )
         reply = response["choices"][0]["message"]["content"]
         bot.send_message(message.chat.id, reply)
-
     except Exception as e:
         bot.send_message(message.chat.id, "⚠️ Възникна грешка при отговора от GPT.")
         print("❌ Error:", e)
 
-# Webhook endpoint – получава съобщения от Telegram
+# Webhook endpoint – Telegram праща тук съобщенията
 @app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def telegram_webhook():
     json_str = request.get_data().decode("UTF-8")
@@ -57,11 +56,12 @@ def telegram_webhook():
     bot.process_new_updates([update])
     return "", 200
 
-# Проверка дали Flask работи (GET)
+# Здравен чек: /
 @app.route("/", methods=["GET"])
 def index():
     return "✅ HarryLive Telegram Bot is running!", 200
-    @app.route("/test", methods=["GET"])
+
+# Здравен чек: /test
+@app.route("/test", methods=["GET"])
 def test():
     return "✅ Flask работи!", 200
-
