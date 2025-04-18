@@ -61,4 +61,3 @@ def telegram_webhook():
 @app.route("/", methods=["GET"])
 def index():
     return "✅ HarryLive Telegram Bot is running!", 200
-    # Trigger redeploy
