@@ -1,7 +1,7 @@
 import os
-import telebot
-import openai
 from flask import Flask, request
+import telebot
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # Зареждане на .env променливите
@@ -18,7 +18,7 @@ if not openai_api_key:
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
-openai.api_key = openai_api_key
+client = OpenAI(api_key=openai_api_key)
 
 # Настройка на webhook
 webhook_url = f"{RAILWAY_STATIC_URL}/{BOT_TOKEN}"
@@ -36,7 +36,7 @@ def start(message):
 def gpt_handler(message):
     try:
         user_input = message.text
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "Ти си полезен асистент в Telegram."},
