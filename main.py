@@ -1,8 +1,8 @@
 import os
 from flask import Flask, request
-import telebot
 from openai import OpenAI
 from dotenv import load_dotenv
+import telebot
 
 # Зареждане на .env променливите
 load_dotenv()
@@ -13,7 +13,6 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 if not BOT_TOKEN:
     raise ValueError("❌ BOT_TOKEN is not set in environment variables")
-
 if not openai_api_key:
     raise ValueError("❌ OPENAI_API_KEY is not set in environment variables")
 
@@ -22,8 +21,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
 # Настройка на OpenAI client
-os.environ["OPENAI_API_KEY"] = openai_api_key
-client = OpenAI()
+client = OpenAI(api_key=openai_api_key)
 
 # Настройка на webhook
 webhook_url = f"{RAILWAY_STATIC_URL}/{BOT_TOKEN}"
@@ -31,18 +29,18 @@ bot.remove_webhook()
 bot.set_webhook(url=webhook_url)
 print("✅ Webhook set to:", webhook_url)
 
-# /start команда
+# /start handler
 @bot.message_handler(commands=["start"])
 def start(message):
     bot.send_message(message.chat.id, "👋 Здрасти! Аз съм HarryLiveBot_73 – готов съм да говоря с теб!")
 
-# GPT-4 обработка на съобщения
+# GPT handler
 @bot.message_handler(func=lambda message: True)
 def gpt_handler(message):
     try:
         user_input = message.text
         response = client.chat.completions.create(
-            model="gpt-4-turbo",
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "Ти си полезен асистент в Telegram."},
                 {"role": "user", "content": user_input}
@@ -50,7 +48,6 @@ def gpt_handler(message):
         )
         reply = response.choices[0].message.content
         bot.send_message(message.chat.id, reply)
-
     except Exception as e:
         bot.send_message(message.chat.id, "⚠️ Възникна грешка при отговора от GPT.")
         print("❌ Error:", e)
@@ -63,11 +60,11 @@ def telegram_webhook():
     bot.process_new_updates([update])
     return "", 200
 
-# Healthcheck endpoint
+# Статус проверка
 @app.route("/", methods=["GET"])
 def index():
     return "✅ HarryLive Telegram Bot is running!", 200
 
-# Flask стартиране само локално
+# Flask Сървър
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
