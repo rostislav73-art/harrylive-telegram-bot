@@ -9,33 +9,32 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RAILWAY_STATIC_URL = os.getenv("RAILWAY_STATIC_URL")
-openai_api_key = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not BOT_TOKEN:
     raise ValueError("❌ BOT_TOKEN is not set in environment variables")
-if not openai_api_key:
+if not OPENAI_API_KEY:
     raise ValueError("❌ OPENAI_API_KEY is not set in environment variables")
 
 # Инициализация на Telebot и Flask
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-# OpenAI client
-os.environ["OPENAI_API_KEY"] = openai_api_key
-client = OpenAI(api_key=openai_api_key)
+# OpenAI client (v1.x API)
+client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Webhook setup
+# Настройка на webhook
 webhook_url = f"{RAILWAY_STATIC_URL}/{BOT_TOKEN}"
 bot.remove_webhook()
 bot.set_webhook(url=webhook_url)
 print("✅ Webhook set to:", webhook_url)
 
-# Start command
+# /start команда
 @bot.message_handler(commands=["start"])
 def start(message):
     bot.send_message(message.chat.id, "👋 Здрасти! Аз съм HarryLiveBot_73 и съм тук да ти помагам с GPT-4.")
 
-# GPT чат
+# Обработка на GPT чат
 @bot.message_handler(func=lambda message: True)
 def gpt_handler(message):
     try:
@@ -61,11 +60,11 @@ def telegram_webhook():
     bot.process_new_updates([update])
     return "", 200
 
-# Проверка
+# Status page
 @app.route("/", methods=["GET"])
 def index():
     return "✅ HarryLive Telegram Bot is running!", 200
 
 # Стартиране
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
