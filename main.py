@@ -20,7 +20,7 @@ if not openai_api_key:
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-# Правилен начин за OpenAI client
+# Задаваме OpenAI API ключ
 os.environ["OPENAI_API_KEY"] = openai_api_key
 client = OpenAI()
 
@@ -54,7 +54,7 @@ def gpt_handler(message):
         bot.send_message(message.chat.id, "⚠️ Възникна грешка при отговора от GPT.")
         print("❌ Error:", e)
 
-# Webhook endpoint
+# Webhook endpoint – получава съобщения от Telegram
 @app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def telegram_webhook():
     json_str = request.get_data().decode("UTF-8")
