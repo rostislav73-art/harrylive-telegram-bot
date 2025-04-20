@@ -1,70 +1,68 @@
 import os
 from flask import Flask, request
-import telebot
-from openai import OpenAI
 from dotenv import load_dotenv
+import telebot
+import openai
 
-# Зареждане на .env
+# Зареждаме променливите от .env файла или от средата
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-RAILWAY_STATIC_URL = os.getenv("RAILWAY_STATIC_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+RAILWAY_STATIC_URL = os.getenv("RAILWAY_STATIC_URL")
+PORT = int(os.getenv("PORT", 8000))
 
-if not BOT_TOKEN:
-    raise ValueError("❌ BOT_TOKEN is not set in environment variables")
-if not OPENAI_API_KEY:
-    raise ValueError("❌ OPENAI_API_KEY is not set in environment variables")
+# Настройка на OpenAI
+openai.api_key = OPENAI_API_KEY
 
-# Инициализация на Telebot и Flask
+# Създаване на Telegram бот
 bot = telebot.TeleBot(BOT_TOKEN)
+
+# Flask приложение
 app = Flask(__name__)
 
-# OpenAI client (v1.x API)
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Рут за health check
+@app.route("/", methods=["GET"])
+def index():
+    return "✅ HarryLiveBot работи!"
 
-# Настройка на webhook
-webhook_url = f"{RAILWAY_STATIC_URL}/{BOT_TOKEN}"
-bot.remove_webhook()
-bot.set_webhook(url=webhook_url)
-print("✅ Webhook set to:", webhook_url)
-
-# /start команда
-@bot.message_handler(commands=["start"])
-def start(message):
-    bot.send_message(message.chat.id, "👋 Здрасти! Аз съм HarryLiveBot_73 и съм тук да ти помагам с GPT-4.")
-
-# Обработка на GPT чат
-@bot.message_handler(func=lambda message: True)
-def gpt_handler(message):
-    try:
-        user_input = message.text
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "Ти си полезен асистент в Telegram."},
-                {"role": "user", "content": user_input}
-            ]
-        )
-        reply = response.choices[0].message.content
-        bot.send_message(message.chat.id, reply)
-    except Exception as e:
-        bot.send_message(message.chat.id, "⚠️ Възникна грешка при отговора от GPT.")
-        print("❌ Error:", e)
-
-# Webhook endpoint
+# Рут за webhook (приема съобщения от Telegram)
 @app.route(f"/{BOT_TOKEN}", methods=["POST"])
-def telegram_webhook():
+def webhook():
     json_str = request.get_data().decode("UTF-8")
     update = telebot.types.Update.de_json(json_str)
     bot.process_new_updates([update])
-    return "", 200
+    return "!", 200
 
-# Status page
-@app.route("/", methods=["GET"])
-def index():
-    return "✅ HarryLive Telegram Bot is running!", 200
+# Команда /start
+@bot.message_handler(commands=["start"])
+def send_welcome(message):
+    bot.reply_to(message, "Здрасти! Аз съм HarryLiveBot_73 и съм тук да ти помагам с GPT-4.")
 
-# Стартиране
+# Отговор на всяко текстово съобщение
+@bot.message_handler(func=lambda message: True)
+def handle_message(message):
+    user_input = message.text
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "user", "content": user_input}
+            ]
+        )
+
+        reply = response.choices[0]['message']['content']
+    except Exception as e:
+        reply = f"❌ Грешка при връзка с OpenAI: {str(e)}"
+
+    bot.reply_to(message, reply)
+
+# Стартиране на Flask приложението + задаване на webhook
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    webhook_url = f"{RAILWAY_STATIC_URL}/{BOT_TOKEN}"
+    bot.remove_webhook()
+    bot.set_webhook(url=webhook_url)
+    print(f"✅ Webhook зададен към: {webhook_url}")
+
+    app.run(host="0.0.0.0", port=PORT)
