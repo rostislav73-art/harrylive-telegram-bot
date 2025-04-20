@@ -11,7 +11,8 @@ openai.api_key = openai_api_key
 app = Flask(__name__)
 
 # 📥 Основна логика за получаване на Telegram съобщения
-@app.route(f"/{bot_token}", methods=["POST"])
+@app.route(f"/bot{bot_token}", methods=["POST"])
+
 def telegram_webhook():
     data = request.json
 
