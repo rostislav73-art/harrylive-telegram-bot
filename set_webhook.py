@@ -10,7 +10,8 @@ webhook_url = f"{RAILWAY_URL}/{BOT_TOKEN}"
 telegram_api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook"
 
 # 🚀 Изпращаме заявка към Telegram
-response = requests.get(telegram_api_url, params={"url": webhook_url})
+response = requests.post(telegram_api_url, json={"url": webhook_url})
+
 
 print("===> Отговор от Telegram:")
 print("Статус код:", response.status_code)
