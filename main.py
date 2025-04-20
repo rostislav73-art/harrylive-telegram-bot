@@ -9,7 +9,7 @@ app = Flask(__name__)
 bot_token = os.getenv("BOT_TOKEN")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# ✅ Създаване на OpenAI клиент – без `proxies` или нестандартни параметри
+# ✅ Създаване на OpenAI клиент
 client = OpenAI(api_key=openai_api_key)
 
 # 📩 Основна логика за Telegram Webhook
@@ -17,7 +17,7 @@ client = OpenAI(api_key=openai_api_key)
 def telegram_webhook():
     data = request.json
 
-    # 🔍 Проверка дали съобщението е валидно
+    # 🔎 Проверка дали съобщението е валидно
     if "message" not in data or "text" not in data["message"]:
         return {"ok": True}
 
@@ -25,7 +25,7 @@ def telegram_webhook():
     user_message = data["message"]["text"]
 
     try:
-        # 🤖 Изпращане на съобщението към OpenAI
+        # 🧠 Изпращане на съобщението към OpenAI
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_message}]
@@ -35,7 +35,7 @@ def telegram_webhook():
         print("OpenAI Error:", e)
         reply = "⚠️ Възникна грешка при отговора от GPT."
 
-    # 📤 Изпращане обратно към Telegram
+    # 📬 Изпращане обратно към Telegram
     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     requests.post(telegram_url, json={"chat_id": chat_id, "text": reply})
 
