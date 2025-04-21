@@ -43,8 +43,8 @@ def webhook():
             "chat_id": chat_id,
             "text": reply
         }
-
-        requests.post(API_URL, json=payload)
+        headers = {'Content-Type': 'application/json'}
+        requests.post(API_URL, json=payload, headers=headers)
 
     except Exception as e:
         print("Webhook error:", e)
