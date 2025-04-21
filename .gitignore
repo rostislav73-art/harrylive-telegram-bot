@@ -1,22 +1,18 @@
-# Python
+# ⛔ Чувствителни данни
+.env
+
+# 🧹 Кешове
 __pycache__/
-*.py[cod]
-*.env
+*.pyc
 
-# Virtual environment
-venv/
-env/
+# 📦 Платформи и зависимости
+*.sqlite3
 .venv/
+.venv.bak/
+node_modules/
+.env.*
 
-# IDEs
+# 🧪 Системни и временни
+.DS_Store
 .vscode/
 .idea/
-
-# Secrets and configs
-.env
-.env.local
-.env.*.local
-
-# macOS/Linux/Windows system files
-.DS_Store
-Thumbs.db
