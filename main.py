@@ -33,19 +33,27 @@ def index():
 def webhook():
     data = request.get_json()
     try:
+        print("✅ Получени данни:", data)
+
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "")
+        print("📩 Получен текст:", text)
 
+        print("⏳ Генерирам отговор...")
         reply = generate_reply(text)
+        print("🤖 Генериран отговор:", reply)
 
         payload = {
             "chat_id": chat_id,
             "text": reply
         }
 
-        requests.post(API_URL, json=payload)
+        response = requests.post(API_URL, json=payload)
+        print("📤 Telegram API статус:", response.status_code)
+        print("📤 Telegram API отговор:", response.text)
+
     except Exception as e:
-        print("Error:", e)
+        print("❌ Грешка:", e)
 
     return {"ok": True}
