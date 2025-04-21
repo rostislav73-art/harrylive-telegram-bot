@@ -4,7 +4,6 @@ import requests
 from flask import Flask, request
 from dotenv import load_dotenv
 
-# Зареждане на .env файла
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -22,13 +21,11 @@ def generate_reply(message_text):
     )
     return chat_completion.choices[0].message.content
 
-# GET за проверка
 @app.route("/", methods=["GET"])
 def index():
     return "Bot is running."
 
-# POST endpoint за Webhook
-@app.route(f"/{BOT_TOKEN}", methods=["POST"])
+@app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json()
     try:
