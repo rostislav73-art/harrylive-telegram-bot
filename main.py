@@ -1,7 +1,7 @@
 import os
 import openai
-from flask import Flask, request
 import requests
+from flask import Flask, request
 from dotenv import load_dotenv
 
 # Зареждане на .env файла
@@ -22,7 +22,13 @@ def generate_reply(message_text):
     )
     return chat_completion.choices[0].message.content
 
-@app.route("/webhook", methods=["POST"])
+# GET за проверка
+@app.route("/", methods=["GET"])
+def index():
+    return "Bot is running."
+
+# POST endpoint за Webhook
+@app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def webhook():
     data = request.get_json()
     try:
@@ -36,10 +42,10 @@ def webhook():
             "chat_id": chat_id,
             "text": reply
         }
+
         requests.post(API_URL, json=payload)
+
     except Exception as e:
         print("Error:", e)
-    return {"ok": True}
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    return {"ok": True}
