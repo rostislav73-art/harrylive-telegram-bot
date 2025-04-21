@@ -4,7 +4,7 @@ from flask import Flask, request
 import requests
 from dotenv import load_dotenv
 
-# Зареждане на променливите от .env файла
+# Зареждане на .env файл
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -13,6 +13,7 @@ API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 app = Flask(__name__)
 
+# Основна функция за генериране на отговор от OpenAI
 def generate_reply(message_text):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -22,7 +23,8 @@ def generate_reply(message_text):
     )
     return response.choices[0].message.content
 
-@app.route("/", methods=["POST"])
+# Обработка на Telegram POST заявките – това е правилният URL!
+@app.route("/webhook", methods=["POST"])
 def handle_message():
     data = request.get_json()
     try:
@@ -37,6 +39,11 @@ def handle_message():
         print("Error:", e)
     return {"ok": True}
 
-# ✅ Подходящо за Railway
+# За да не връща 405 при отваряне през браузъра
+@app.route("/", methods=["GET"])
+def home():
+    return "✅ Telegram bot is running!"
+
+# Само за локален тест
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True)
