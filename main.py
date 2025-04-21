@@ -4,6 +4,7 @@ import requests
 from flask import Flask, request
 from dotenv import load_dotenv
 
+# Зареждане на .env файла
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -12,19 +13,22 @@ API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 app = Flask(__name__)
 
+# Новият метод за Chat Completion
 def generate_reply(message_text):
-    chat_completion = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "user", "content": message_text}
         ]
     )
-    return chat_completion.choices[0].message.content
+    return response.choices[0].message.content
 
+# Проверка дали приложението работи
 @app.route("/", methods=["GET"])
 def index():
     return "Bot is running."
 
+# Webhook endpoint
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json()
@@ -41,7 +45,6 @@ def webhook():
         }
 
         requests.post(API_URL, json=payload)
-
     except Exception as e:
         print("Error:", e)
 
