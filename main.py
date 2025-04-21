@@ -2,6 +2,10 @@ import os
 import openai
 from flask import Flask, request
 import requests
+from dotenv import load_dotenv
+
+# Зареждане на променливите от .env файла
+load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -33,5 +37,6 @@ def handle_message():
         print("Error:", e)
     return {"ok": True}
 
+# ✅ Подходящо за Railway
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
