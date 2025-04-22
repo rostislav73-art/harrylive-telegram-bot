@@ -10,8 +10,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-app = Flask(__name__)
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+app = Flask(__name__)
 
 @app.route("/")
 def home():
