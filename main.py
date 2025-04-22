@@ -16,14 +16,12 @@ def generate_reply(message_text):
     try:
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": message_text}
-            ]
+            messages=[{"role": "user", "content": message_text}]
         )
         return response.choices[0].message.content
     except Exception as e:
         print("OpenAI error:", e)
-        return "Възникна грешка при генериране на отговор."
+        return "⚠️ Грешка при генериране на отговор."
 
 @app.route("/", methods=["GET"])
 def index():
@@ -32,8 +30,13 @@ def index():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json()
+    print("Received data:", data)  # <== логваме заявката в Railway логовете
+
     try:
-        message = data["message"]
+        message = data.get("message")
+        if not message:
+            return {"ok": True}
+
         chat_id = message["chat"]["id"]
         text = message.get("text", "")
 
@@ -44,8 +47,7 @@ def webhook():
             "text": reply
         }
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(API_URL, json=payload, headers=headers)
-        print("Telegram response:", response.status_code, response.text)
+        requests.post(API_URL, json=payload, headers=headers)
 
     except Exception as e:
         print("Webhook error:", e)
@@ -54,6 +56,6 @@ def webhook():
 
 if __name__ == "__main__":
     if os.getenv("RAILWAY_ENVIRONMENT"):
-        pass  # в Railway gunicorn стартира приложението
+        pass
     else:
         app.run(debug=True)
