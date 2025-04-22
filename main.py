@@ -50,5 +50,9 @@ def webhook():
         print("Webhook error:", e)
 
     return {"ok": True}
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    if os.getenv("RAILWAY_ENVIRONMENT"):
+        pass  # в Railway gunicorn стартира приложението
+    else:
+        app.run(debug=True)
