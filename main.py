@@ -50,3 +50,5 @@ def webhook():
         print("Webhook error:", e)
 
     return {"ok": True}
+if __name__ == "__main__":
+    app.run(debug=True)
