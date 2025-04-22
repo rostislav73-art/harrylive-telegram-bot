@@ -1,6 +1,6 @@
 import os
-import openai
 import requests
+import openai
 from flask import Flask, request
 from dotenv import load_dotenv
 
@@ -8,9 +8,9 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
+openai.api_key = OPENAI_API_KEY
 app = Flask(__name__)
 
 @app.route("/")
@@ -27,8 +27,7 @@ def webhook():
         text = data["message"].get("text", "")
 
         try:
-            client = openai.OpenAI(api_key=OPENAI_API_KEY)
-            response = client.chat.completions.create(
+            response = openai.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": text}]
             )
@@ -40,6 +39,7 @@ def webhook():
         payload = {"chat_id": chat_id, "text": reply}
         headers = {"Content-Type": "application/json"}
         requests.post(API_URL, json=payload, headers=headers)
+        print("Telegram response sent.")
 
     return {"ok": True}
 
