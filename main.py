@@ -44,7 +44,8 @@ def webhook():
             "text": reply
         }
         headers = {'Content-Type': 'application/json'}
-        requests.post(API_URL, json=payload, headers=headers)
+        response = requests.post(API_URL, json=payload, headers=headers)
+        print("Telegram response:", response.status_code, response.text)
 
     except Exception as e:
         print("Webhook error:", e)
