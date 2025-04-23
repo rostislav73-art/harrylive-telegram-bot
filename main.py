@@ -42,6 +42,3 @@ def webhook():
         print("Telegram response sent.")
 
     return {"ok": True}
-
-if __name__ == "__main__":
-    app.run(debug=True)
