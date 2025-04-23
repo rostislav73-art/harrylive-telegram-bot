@@ -36,7 +36,7 @@ def webhook():
 
         try:
             response = openai.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4-turbo",
                 messages=[{"role": "user", "content": text}]
             )
             reply = response.choices[0].message.content.strip()
