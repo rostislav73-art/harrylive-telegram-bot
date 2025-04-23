@@ -13,8 +13,8 @@ API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 openai.api_key = OPENAI_API_KEY
 app = Flask(__name__)
 
-# ✅ Разрешени потребители
-ALLOWED_USERS = [6255661181]  # замени с реални chat_id-та
+# ✅ Разрешени потребители (само тези chat_id ще получават отговор)
+ALLOWED_USERS = [6255661181]  # смени с твоя chat_id
 
 @app.route("/")
 def home():
@@ -29,6 +29,7 @@ def webhook():
         chat_id = data["message"]["chat"]["id"]
         text = data["message"].get("text", "")
 
+        # 🔒 Блокирай непознати потребители
         if chat_id not in ALLOWED_USERS:
             print(f"❌ Blocked user {chat_id}")
             return {"ok": True}
@@ -48,4 +49,4 @@ def webhook():
         r = requests.post(API_URL, json=payload, headers=headers)
         print("📤 Telegram response:", r.status_code, r.text)
 
-    return {"ok": True}
+    return {"ok": True"}
