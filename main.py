@@ -13,20 +13,27 @@ openai.api_key = OPENAI_API_KEY
 
 
 def ask_gpt(message_text):
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "Ти си полезен Telegram бот, който помага на потребителя."},
-            {"role": "user", "content": message_text}
-        ]
-    )
-    return response.choices[0].message["content"]
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Ти си полезен Telegram бот, който помага на потребителя."},
+                {"role": "user", "content": message_text}
+            ]
+        )
+        return response.choices[0].message["content"]
+    except Exception as e:
+        print("OpenAI error:", e)
+        return "⚠️ Възникна грешка при връзката с GPT."
 
 
 def send_message(chat_id, text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text}
-    requests.post(url, json=payload)
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print("Telegram error:", e)
 
 
 @app.route("/")
