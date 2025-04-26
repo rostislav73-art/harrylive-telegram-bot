@@ -13,7 +13,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 WEBHOOK_URL = "https://web-production-f7800.up.railway.app/webhook"
 
-bot = telebot.TeleBot(BOT_TOKEN)
+bot = telebot.TeleBot(BOT_TOKEN, parse_mode='Markdown')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Функция за прогнозата за времето
@@ -24,10 +24,10 @@ def get_weather(city="Sofia"):
         res = requests.get(url)
         if res.status_code != 200:
             print("Weather API error:", res.text)
-            return "⚠️ Грешка при вземане на прогнозата за времето."
+            return "⚠️ *Грешка при вземане на прогнозата за времето.*"
         data = res.json()
         if "days" not in data:
-            return "⚠️ Няма прогноза за това място."
+            return "⚠️ *Няма прогноза за това място.*"
         day = data["days"][0]
         temp = day.get("temp")
         conditions = day.get("conditions", "").lower()
@@ -47,10 +47,10 @@ def get_weather(city="Sofia"):
                 weather_icon = icon
                 break
 
-        return f"{weather_icon} В момента в {city} е {temp}°C с {conditions}. Влажността е {humidity}%.",
+        return f"{weather_icon} *В момента в {city} е {temp}°C с {conditions}.*\n💧 Влажност: {humidity}%"
     except Exception as e:
         print("Weather API exception:", e)
-        return "⚠️ Възникна грешка при връзката с прогнозата."
+        return "⚠️ *Възникна грешка при връзката с прогнозата.*"
 
 # Функция за чат с GPT
 
@@ -73,7 +73,7 @@ def ask_gpt(message_text):
         return response.choices[0].message.content
     except Exception as e:
         print("OpenAI error:", e)
-        return "⚠️ Възникна грешка при връзката с GPT."
+        return "⚠️ *Възникна грешка при връзката с GPT.*"
 
 # Старт команда с меню
 @bot.message_handler(commands=['start'])
@@ -82,27 +82,30 @@ def start_handler(message):
     markup.add(InlineKeyboardButton("🌦️ Попитай за времето", callback_data="weather"))
     markup.add(InlineKeyboardButton("💬 Говори с GPT", callback_data="chatgpt"))
     markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
-    bot.send_message(message.chat.id, "Избери какво искаш да направиш:", reply_markup=markup)
+    bot.send_message(message.chat.id, "*\ud83c\udf10 Добре дошъл! Избери какво искаш да направиш:*", reply_markup=markup)
 
 # Callback бутони
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     if call.data == "weather":
-        bot.send_message(call.message.chat.id, "🌦️ Напиши името на града, за да ти дам прогноза!")
+        bot.send_message(call.message.chat.id, "🌦️ *Напиши името на града, за да ти дам прогноза!* ✍️")
     elif call.data == "chatgpt":
-        bot.send_message(call.message.chat.id, "💬 Пиши ми въпрос и ще ти отговоря като GPT-4!")
+        bot.send_message(call.message.chat.id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
         bot.send_message(call.message.chat.id, 
-            "ℹ️ Инструкции:\n\n"
+            "ℹ️ *Инструкции:*\n\n"
             "🌦️ Натисни 'Попитай за времето' и напиши името на град, за да получиш прогноза.\n"
             "💬 Натисни 'Говори с GPT', за да ми зададеш въпрос и ще ти отговоря като ChatGPT.\n"
-            "\nПросто напиши какво те интересува!")
+            "\n✨ *Просто напиши какво те интересува!* ✍️")
 
 # Обработване на съобщения
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
-    reply = ask_gpt(message.text)
-    bot.send_message(message.chat.id, reply)
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "❓ *Неразпозната команда.* Моля, използвай менюто /start ✨")
+    else:
+        reply = ask_gpt(message.text)
+        bot.send_message(message.chat.id, reply)
 
 # Webhook обработка
 @app.route("/webhook", methods=["POST"])
