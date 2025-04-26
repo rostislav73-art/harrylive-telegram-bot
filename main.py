@@ -13,31 +13,28 @@ WEBHOOK_URL = "https://web-production-f7800.up.railway.app/webhook"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-
 def get_weather(city="Sofia"):
     api_key = OPENWEATHER_API_KEY
-    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={api_key}&contentType=json"
+    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={api_key}&contentType=json&include=current"
     try:
         res = requests.get(url)
         data = res.json()
-        if "days" not in data:
+        if "currentConditions" not in data:
             return "Не мога да намеря прогнозата за това място."
-        day = data["days"][0]
-        temp = day["temp"]
-        conditions = day["conditions"]
-        humidity = day["humidity"]
+        current = data["currentConditions"]
+        temp = current.get("temp", "N/A")
+        conditions = current.get("conditions", "N/A")
+        humidity = current.get("humidity", "N/A")
         return f"В момента в {city} е {temp}°C с {conditions}. Влажността е {humidity}%."
     except Exception as e:
         print("Weather API error:", e)
         return "⚠️ Възникна грешка при вземане на прогнозата."
 
-
 def ask_gpt(message_text):
     if "времето" in message_text.lower():
-        match = re.search(r'в\s+([А-Яа-яA-Za-z]+)', message_text)
+        match = re.search(r'\b(?:в|на)\s+([\u0410-\u042f\u0430-\u044fA-Za-z]+)', message_text)
         city = match.group(1) if match else "Sofia"
         return get_weather(city)
-
     try:
         response = client.chat.completions.create(
             model="gpt-4",
@@ -53,7 +50,6 @@ def ask_gpt(message_text):
         print("OpenAI error:", e)
         return "⚠️ Възникна грешка при връзката с GPT."
 
-
 def send_message(chat_id, text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text}
@@ -62,11 +58,9 @@ def send_message(chat_id, text):
     except Exception as e:
         print("Telegram error:", e)
 
-
 @app.route("/")
 def index():
     return "🤖 Bot is live! Use /webhook for Telegram updates."
-
 
 @app.route("/webhook", methods=["POST"])
 def telegram_webhook():
@@ -78,7 +72,6 @@ def telegram_webhook():
         send_message(chat_id, reply)
     return {"ok": True}
 
-
 def set_webhook():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}"
     try:
@@ -86,7 +79,6 @@ def set_webhook():
         print("Webhook set:", res.json())
     except Exception as e:
         print("Failed to set webhook:", e)
-
 
 set_webhook()
 
