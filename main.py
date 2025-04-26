@@ -18,6 +18,8 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Функция за прогнозата за времето
 def get_weather(city="Sofia"):
+    if not city.strip():
+        return "⚠️ *Моля, въведи валидно име на град!*"
     api_key = OPENWEATHER_API_KEY
     url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={api_key}&contentType=json"
     try:
@@ -55,6 +57,9 @@ def get_weather(city="Sofia"):
 # Функция за чат с GPT
 
 def ask_gpt(message_text):
+    if not message_text.strip():
+        return "⚠️ *Моля, въведи съобщение!*"
+
     if "времето" in message_text.lower():
         match = re.search(r'в\s+([А-Яа-яA-Za-z\s]+)', message_text)
         city = match.group(1).strip() if match else "Sofia"
@@ -101,6 +106,9 @@ def callback_query(call):
 # Обработване на съобщения
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
+    if not message.text.strip():
+        bot.send_message(message.chat.id, "⚠️ *Моля, въведи текстово съобщение!* ✍️")
+        return
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "❓ *Неразпозната команда.* Моля, използвай менюто /start ✨")
     else:
