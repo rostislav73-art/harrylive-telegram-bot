@@ -1,3 +1,4 @@
+
 import os
 import re
 import requests
@@ -15,6 +16,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 def get_weather(city="Sofia"):
     api_key = OPENWEATHER_API_KEY
+    city = city.strip().replace(" ", "%20")
     url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={api_key}&contentType=json"
     try:
         res = requests.get(url)
@@ -23,19 +25,20 @@ def get_weather(city="Sofia"):
         if "days" not in data:
             return "Не мога да намеря прогнозата за това място."
         day = data["days"][0]
-        temp = day.get("temp", "?")
-        conditions = day.get("conditions", "неизвестно")
-        humidity = day.get("humidity", "?")
-        return f"В момента в {city} е {temp}°C с {conditions.lower()}. Влажността е {humidity}%."
+        temp = day["temp"]
+        conditions = day["conditions"]
+        humidity = day["humidity"]
+        return f"В момента в {city} е {temp} °C с {conditions}. Влажността е {humidity}%."
     except Exception as e:
         print("Weather API error:", e)
         return "⚠️ Възникна грешка при вземане на прогнозата."
 
 def ask_gpt(message_text):
     if "времето" in message_text.lower():
-        match = re.search(r'в\s+([\u0410-\u042f\u0430-\u044fA-Za-z]+)', message_text)
+        match = re.search(r'в\s+([А-Яа-яA-Za-z]+)', message_text)
         city = match.group(1) if match else "Sofia"
         return get_weather(city)
+
     try:
         response = client.chat.completions.create(
             model="gpt-4",
