@@ -1,4 +1,3 @@
-
 import os
 import re
 import requests
@@ -16,11 +15,9 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 def get_weather(city="Sofia"):
     api_key = OPENWEATHER_API_KEY
-    city = city.strip().replace(" ", "%20")
-    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={api_key}&contentType=json"
+    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&key={api_key}&contentType=json"
     try:
         res = requests.get(url)
-        res.raise_for_status()
         data = res.json()
         if "days" not in data:
             return "Не мога да намеря прогнозата за това място."
@@ -28,7 +25,7 @@ def get_weather(city="Sofia"):
         temp = day["temp"]
         conditions = day["conditions"]
         humidity = day["humidity"]
-        return f"В момента в {city} е {temp} °C с {conditions}. Влажността е {humidity}%."
+        return f"В момента в {city} е {temp}°C с {conditions}. Влажността е {humidity}%."
     except Exception as e:
         print("Weather API error:", e)
         return "⚠️ Възникна грешка при вземане на прогнозата."
@@ -64,7 +61,7 @@ def send_message(chat_id, text):
 
 @app.route("/")
 def index():
-    return "🧙‍♂️ Bot is live! Use /webhook for Telegram updates."
+    return "🤖 Bot is live! Use /webhook for Telegram updates."
 
 @app.route("/webhook", methods=["POST"])
 def telegram_webhook():
