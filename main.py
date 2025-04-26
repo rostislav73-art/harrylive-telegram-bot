@@ -13,7 +13,6 @@ WEBHOOK_URL = "https://web-production-f7800.up.railway.app/webhook"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-
 def get_weather(city="Sofia"):
     api_key = OPENWEATHER_API_KEY
     url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={api_key}&contentType=json"
@@ -25,15 +24,31 @@ def get_weather(city="Sofia"):
         data = res.json()
         if "days" not in data:
             return "⚠️ Няма прогноза за това място."
+        
         day = data["days"][0]
         temp = day.get("temp")
         conditions = day.get("conditions")
         humidity = day.get("humidity")
-        return f"В момента в {city} е {temp}°C с {conditions}. Влажността е {humidity}%."
+
+        icons = {
+            "Rain": "🌧️",
+            "Overcast": "☁️",
+            "Cloudy": "☁️",
+            "Partially cloudy": "⛅",
+            "Clear": "☀️",
+            "Snow": "❄️",
+            "Thunderstorm": "⛈️"
+        }
+        weather_icon = "🌡️"
+        for key, icon in icons.items():
+            if key.lower() in conditions.lower():
+                weather_icon = icon
+                break
+
+        return f"{weather_icon} В момента в {city} е {temp}°C с {conditions}. Влажността е {humidity}%."
     except Exception as e:
         print("Weather API exception:", e)
         return "⚠️ Възникна грешка при връзката с прогнозата."
-
 
 def ask_gpt(message_text):
     if "времето" in message_text.lower():
@@ -56,7 +71,6 @@ def ask_gpt(message_text):
         print("OpenAI error:", e)
         return "⚠️ Възникна грешка при връзката с GPT."
 
-
 def send_message(chat_id, text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text}
@@ -65,11 +79,9 @@ def send_message(chat_id, text):
     except Exception as e:
         print("Telegram error:", e)
 
-
 @app.route("/")
 def index():
     return "🤖 Bot is live! Use /webhook for Telegram updates."
-
 
 @app.route("/webhook", methods=["POST"])
 def telegram_webhook():
@@ -81,7 +93,6 @@ def telegram_webhook():
         send_message(chat_id, reply)
     return {"ok": True}
 
-
 def set_webhook():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}"
     try:
@@ -89,7 +100,6 @@ def set_webhook():
         print("Webhook set:", res.json())
     except Exception as e:
         print("Failed to set webhook:", e)
-
 
 set_webhook()
 
