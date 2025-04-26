@@ -1,7 +1,7 @@
 import os
 import requests
-import openai
 from flask import Flask, request
+from openai import OpenAI
 
 app = Flask(__name__)
 
@@ -9,19 +9,19 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 WEBHOOK_URL = "https://web-production-f7800.up.railway.app/webhook"
 
-openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 def ask_gpt(message_text):
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "Ти си полезен Telegram бот, който помага на потребителя."},
                 {"role": "user", "content": message_text}
             ]
         )
-        return response.choices[0].message["content"]
+        return response.choices[0].message.content
     except Exception as e:
         print("OpenAI error:", e)
         return "⚠️ Възникна грешка при връзката с GPT."
