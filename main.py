@@ -109,21 +109,34 @@ def echo_all(message):
         reply = get_weather(text)
         bot.send_message(chat_id, reply)
         user_context[chat_id] = []
-    else:
-        lowered = text.lower()
-        if "хари" in lowered:
-            if "какво правиш" in lowered:
-                bot.send_message(chat_id, "🤖 Работя неуморно, за да ти помагам! Какво ще пожелаеш?")
-            elif "къде си" in lowered:
-                bot.send_message(chat_id, "📍 В дигиталния свят съм, винаги до теб! Какво мога да направя?")
-            elif "кой си" in lowered:
-                bot.send_message(chat_id, "👋 Аз съм Хари — твоят Telegram помощник, свързан с GPT-4! 🚀")
-            else:
-                bot.send_message(chat_id, "👋 Здравей! Какво мога да направя за теб?")
-            return
+        return
 
-        reply = ask_gpt(chat_id, text)
-        bot.send_message(chat_id, reply)
+    lowered = text.lower()
+
+    # Автоматично разпознаване на въпрос за времето
+    if "времето в" in lowered:
+        try:
+            city = lowered.split("времето в", 1)[1].strip().rstrip("?.,!")
+            reply = get_weather(city)
+            bot.send_message(chat_id, reply)
+        except Exception as e:
+            print("City parse error:", e)
+            bot.send_message(chat_id, "⚠️ *Моля, задай въпроса отново по правилен начин!*")
+        return
+
+    if "хари" in lowered:
+        if "какво правиш" in lowered:
+            bot.send_message(chat_id, "🤖 Работя неуморно, за да ти помагам! Какво ще пожелаеш?")
+        elif "къде си" in lowered:
+            bot.send_message(chat_id, "📍 В дигиталния свят съм, винаги до теб! Какво мога да направя?")
+        elif "кой си" in lowered:
+            bot.send_message(chat_id, "👋 Аз съм Хари — твоят Telegram помощник, свързан с GPT-4! 🚀")
+        else:
+            bot.send_message(chat_id, "👋 Здравей! Какво мога да направя за теб?")
+        return
+
+    reply = ask_gpt(chat_id, text)
+    bot.send_message(chat_id, reply)
 
 @app.route("/webhook", methods=["POST"])
 def telegram_webhook():
