@@ -16,12 +16,12 @@ WEBHOOK_URL = "https://web-production-f7800.up.railway.app/webhook"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode='Markdown')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Функция за прогнозата за времето
+user_context = {}  # нов речник за контекста на потребителите
+
 def get_weather(city="Sofia"):
     if not city.strip():
         return "⚠️ *Моля, въведи валидно име на град!*"
-    api_key = OPENWEATHER_API_KEY
-    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={api_key}&contentType=json"
+    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={OPENWEATHER_API_KEY}&contentType=json"
     try:
         res = requests.get(url)
         if res.status_code != 200:
@@ -36,12 +36,8 @@ def get_weather(city="Sofia"):
         humidity = day.get("humidity")
 
         icons = {
-            "rain": "🌧️",
-            "overcast": "☁️",
-            "cloud": "☁️",
-            "clear": "☀️",
-            "snow": "❄️",
-            "thunderstorm": "⛈️"
+            "rain": "🌧️", "overcast": "☁️", "cloud": "☁️",
+            "clear": "☀️", "snow": "❄️", "thunderstorm": "⛈️"
         }
         weather_icon = "🌡️"
         for key, icon in icons.items():
@@ -54,16 +50,9 @@ def get_weather(city="Sofia"):
         print("Weather API exception:", e)
         return "⚠️ *Възникна грешка при връзката с прогнозата.*"
 
-# Функция за чат с GPT
 def ask_gpt(message_text):
     if not message_text.strip():
         return "⚠️ *Моля, въведи съобщение!*"
-
-    if "времето" in message_text.lower():
-        match = re.search(r'в\s+([А-Яа-яA-Za-z\s]+)', message_text)
-        city = match.group(1).strip() if match else "Sofia"
-        return get_weather(city)
-
     try:
         response = client.chat.completions.create(
             model="gpt-4",
@@ -79,40 +68,45 @@ def ask_gpt(message_text):
         print("OpenAI error:", e)
         return "⚠️ *Възникна грешка при връзката с GPT.*"
 
-# Старт команда с Inline бутони
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("🌦️ Попитай за времето", callback_data="weather"))
-    markup.add(InlineKeyboardButton("💬 Говори с GPT", callback_data="chatgpt"))
-    markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
-    bot.send_message(message.chat.id, "🌐 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
+    markup.add(InlineKeyboardButton("\ud83c\udf26️ Попитай за времето", callback_data="weather"))
+    markup.add(InlineKeyboardButton("\ud83d\udcac Говори с GPT", callback_data="chatgpt"))
+    markup.add(InlineKeyboardButton("\u2139\ufe0f Помощ", callback_data="help"))
+    bot.send_message(message.chat.id, "\ud83c\udf10 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
 
-# Callback обработка
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
+    chat_id = call.message.chat.id
     if call.data == "weather":
-        bot.send_message(call.message.chat.id, "✍️ *Напиши името на града, за да ти дам прогноза!*")
+        user_context[chat_id] = "awaiting_city"
+        bot.send_message(chat_id, "✍️ *Напиши името на града, за да ти дам прогноза!*")
     elif call.data == "chatgpt":
-        bot.send_message(call.message.chat.id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
+        user_context[chat_id] = "chatgpt"
+        bot.send_message(chat_id, "\ud83d\udcac *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
-        bot.send_message(call.message.chat.id,
-            "ℹ️ *Инструкции:*\n\n"
-            "🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.\n"
-            "💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.\n"
-            "\n✨ *Просто напиши какво те интересува!* ✍️")
+        bot.send_message(chat_id, "\u2139\ufe0f *Инструкции:*\n\n\ud83c\udf26️ Натисни 'Попитай за времето' и напиши град за прогноза.\n\ud83d\udcac Натисни 'Говори с GPT', за да ми зададеш въпрос.\n\n✨ *Просто напиши какво те интересува!* ✍️")
 
-# Обработване на съобщения
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
+    chat_id = message.chat.id
     text = message.text.strip()
+
     if text.startswith("/"):
-        bot.send_message(message.chat.id, "❓ *Неразпозната команда.* Моля, използвай менюто /start ✨")
+        bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
+        return
+
+    state = user_context.get(chat_id)
+
+    if state == "awaiting_city":
+        reply = get_weather(text)
+        bot.send_message(chat_id, reply)
+        user_context[chat_id] = None
     else:
         reply = ask_gpt(text)
-        bot.send_message(message.chat.id, reply)
+        bot.send_message(chat_id, reply)
 
-# Webhook обработка
 @app.route("/webhook", methods=["POST"])
 def telegram_webhook():
     if request.headers.get('content-type') == 'application/json':
@@ -121,12 +115,10 @@ def telegram_webhook():
         bot.process_new_updates([update])
     return {'ok': True}
 
-# Инфо страница
 @app.route("/")
 def index():
     return "🤖 Bot is live! Use /webhook for Telegram updates."
 
-# Set webhook
 import requests as rq
 
 def set_webhook():
