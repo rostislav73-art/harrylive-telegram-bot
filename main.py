@@ -34,7 +34,7 @@ def detect_language(text):
     else:
         return 'en'
 
-def search_wikipedia(query):
+def search_wikipedia(query, chat_id=None):
     lang = detect_language(query)
     wiki = wiki_bg if lang == 'bg' else wiki_en
     page = wiki.page(query)
@@ -45,7 +45,18 @@ def search_wikipedia(query):
             summary = summary[:500] + "..."
         return f"📚 *Информация от Wikipedia:*\n\n{summary}"
     else:
-        return None
+        # Ако няма Wikipedia резултат ➔ пита GPT
+        if chat_id:
+            try:
+                bot.send_chat_action(chat_id, 'typing')
+                prompt = f"Обясни кратко и ясно: {query}"
+                gpt_reply = ask_gpt(chat_id, prompt)
+                return f"🤖 *Информация чрез GPT:*\n\n{gpt_reply}"
+            except Exception as e:
+                print("GPT fallback error:", e)
+                return "⚠️ *Няма налична информация в момента.*"
+        else:
+            return "⚠️ *Няма налична информация.*"
 
 def get_weather(city="Sofia"):
     if not city.strip():
@@ -83,7 +94,7 @@ def ask_gpt(chat_id, message_text):
     if not message_text.strip():
         return "⚠️ *Моля, въведи съобщение!*"
     try:
-        bot.send_chat_action(chat_id, 'typing')  # 🔥 Показва typing
+        bot.send_chat_action(chat_id, 'typing')
 
         history = user_context.get(chat_id, [])
         history.append({"role": "user", "content": message_text})
@@ -138,7 +149,7 @@ def echo_all(message):
     context = user_context.get(chat_id, [])
 
     if context and context[0]["content"] == "awaiting_city":
-        bot.send_chat_action(chat_id, 'typing')  # 🔥
+        bot.send_chat_action(chat_id, 'typing')
         reply = get_weather(text)
         bot.send_message(chat_id, reply)
         user_context[chat_id] = []
@@ -148,7 +159,7 @@ def echo_all(message):
 
     if "времето в" in lowered:
         try:
-            bot.send_chat_action(chat_id, 'typing')  # 🔥
+            bot.send_chat_action(chat_id, 'typing')
             city = lowered.split("времето в", 1)[1].strip().rstrip("?.,!")
             reply = get_weather(city)
             bot.send_message(chat_id, reply)
@@ -158,14 +169,14 @@ def echo_all(message):
         return
 
     if lowered.startswith(("кой е", "какво е", "кога е", "къде е", "who is", "what is", "when is", "where is")):
-        bot.send_chat_action(chat_id, 'typing')  # 🔥
-        wiki_info = search_wikipedia(text)
+        bot.send_chat_action(chat_id, 'typing')
+        wiki_info = search_wikipedia(text, chat_id)
         if wiki_info:
             bot.send_message(chat_id, wiki_info)
             return
 
     if "хари" in lowered:
-        bot.send_chat_action(chat_id, 'typing')  # 🔥
+        bot.send_chat_action(chat_id, 'typing')
         if "какво правиш" in lowered:
             bot.send_message(chat_id, "🤖 Работя неуморно, за да ти помагам! Какво ще пожелаеш?")
         elif "къде си" in lowered:
@@ -176,7 +187,7 @@ def echo_all(message):
             bot.send_message(chat_id, "👋 Здравей! Какво мога да направя за теб?")
         return
 
-    bot.send_chat_action(chat_id, 'typing')  # 🔥
+    bot.send_chat_action(chat_id, 'typing')
     reply = ask_gpt(chat_id, text)
     bot.send_message(chat_id, reply)
 
