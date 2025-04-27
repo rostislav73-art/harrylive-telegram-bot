@@ -1,5 +1,4 @@
 import os
-import re
 import requests
 from flask import Flask, request
 from openai import OpenAI
@@ -16,7 +15,7 @@ WEBHOOK_URL = "https://web-production-f7800.up.railway.app/webhook"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode='Markdown')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-user_context = {}  # нов речник за контекста на потребителите
+user_context = {}  # чат_id -> списък със съобщения
 
 def get_weather(city="Sofia"):
     if not city.strip():
@@ -50,20 +49,27 @@ def get_weather(city="Sofia"):
         print("Weather API exception:", e)
         return "⚠️ *Възникна грешка при връзката с прогнозата.*"
 
-def ask_gpt(message_text):
+def ask_gpt(chat_id, message_text):
     if not message_text.strip():
         return "⚠️ *Моля, въведи съобщение!*"
     try:
+        history = user_context.get(chat_id, [])
+        history.append({"role": "user", "content": message_text})
+        history = history[-10:]
+
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "Ти си полезен Telegram бот, който помага на потребителя."},
-                {"role": "user", "content": message_text}
-            ],
+                {"role": "system", "content": "Ти си полезен Telegram бот, който помага на потребителя."}
+            ] + history,
             temperature=0.7,
             max_tokens=500,
         )
-        return response.choices[0].message.content
+
+        reply_text = response.choices[0].message.content
+        history.append({"role": "assistant", "content": reply_text})
+        user_context[chat_id] = history
+        return reply_text
     except Exception as e:
         print("OpenAI error:", e)
         return "⚠️ *Възникна грешка при връзката с GPT.*"
@@ -71,22 +77,22 @@ def ask_gpt(message_text):
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("\ud83c\udf26️ Попитай за времето", callback_data="weather"))
-    markup.add(InlineKeyboardButton("\ud83d\udcac Говори с GPT", callback_data="chatgpt"))
-    markup.add(InlineKeyboardButton("\u2139\ufe0f Помощ", callback_data="help"))
-    bot.send_message(message.chat.id, "\ud83c\udf10 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
+    markup.add(InlineKeyboardButton("🌦️ Попитай за времето", callback_data="weather"))
+    markup.add(InlineKeyboardButton("💬 Говори с GPT", callback_data="chatgpt"))
+    markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
+    bot.send_message(message.chat.id, "🌍 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     chat_id = call.message.chat.id
     if call.data == "weather":
-        user_context[chat_id] = "awaiting_city"
+        user_context[chat_id] = {"state": "awaiting_city"}
         bot.send_message(chat_id, "✍️ *Напиши името на града, за да ти дам прогноза!*")
     elif call.data == "chatgpt":
-        user_context[chat_id] = "chatgpt"
-        bot.send_message(chat_id, "\ud83d\udcac *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
+        user_context[chat_id] = []
+        bot.send_message(chat_id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
-        bot.send_message(chat_id, "\u2139\ufe0f *Инструкции:*\n\n\ud83c\udf26️ Натисни 'Попитай за времето' и напиши град за прогноза.\n\ud83d\udcac Натисни 'Говори с GPT', за да ми зададеш въпрос.\n\n✨ *Просто напиши какво те интересува!* ✍️")
+        bot.send_message(chat_id, "ℹ️ *Инструкции:*\n\n🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.\n💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.\n\n✨ *Просто напиши какво те интересува!* ✍️")
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
@@ -97,14 +103,14 @@ def echo_all(message):
         bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
         return
 
-    state = user_context.get(chat_id)
+    context = user_context.get(chat_id)
 
-    if state == "awaiting_city":
+    if isinstance(context, dict) and context.get("state") == "awaiting_city":
         reply = get_weather(text)
         bot.send_message(chat_id, reply)
-        user_context[chat_id] = None
+        user_context[chat_id] = []
     else:
-        reply = ask_gpt(text)
+        reply = ask_gpt(chat_id, text)
         bot.send_message(chat_id, reply)
 
 @app.route("/webhook", methods=["POST"])
