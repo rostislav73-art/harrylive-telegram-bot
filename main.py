@@ -55,7 +55,6 @@ def get_weather(city="Sofia"):
         return "⚠️ *Възникна грешка при връзката с прогнозата.*"
 
 # Функция за чат с GPT
-
 def ask_gpt(message_text):
     if not message_text.strip():
         return "⚠️ *Моля, въведи съобщение!*"
@@ -80,39 +79,37 @@ def ask_gpt(message_text):
         print("OpenAI error:", e)
         return "⚠️ *Възникна грешка при връзката с GPT.*"
 
-# Старт команда с меню
+# Старт команда с Inline бутони
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("🌦️ Попитай за времето", callback_data="weather"))
     markup.add(InlineKeyboardButton("💬 Говори с GPT", callback_data="chatgpt"))
     markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
-    bot.send_message(message.chat.id, "*\ud83c\udf10 Добре дошъл! Избери какво искаш да направиш:*", reply_markup=markup)
+    bot.send_message(message.chat.id, "🌐 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
 
-# Callback бутони
+# Callback обработка
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     if call.data == "weather":
-        bot.send_message(call.message.chat.id, "🌦️ *Напиши името на града, за да ти дам прогноза!* ✍️")
+        bot.send_message(call.message.chat.id, "✍️ *Напиши името на града, за да ти дам прогноза!*")
     elif call.data == "chatgpt":
         bot.send_message(call.message.chat.id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
-        bot.send_message(call.message.chat.id, 
+        bot.send_message(call.message.chat.id,
             "ℹ️ *Инструкции:*\n\n"
-            "🌦️ Натисни 'Попитай за времето' и напиши името на град, за да получиш прогноза.\n"
-            "💬 Натисни 'Говори с GPT', за да ми зададеш въпрос и ще ти отговоря като ChatGPT.\n"
+            "🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.\n"
+            "💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.\n"
             "\n✨ *Просто напиши какво те интересува!* ✍️")
 
 # Обработване на съобщения
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
-    if not message.text.strip():
-        bot.send_message(message.chat.id, "⚠️ *Моля, въведи текстово съобщение!* ✍️")
-        return
-    if message.text.startswith("/"):
+    text = message.text.strip()
+    if text.startswith("/"):
         bot.send_message(message.chat.id, "❓ *Неразпозната команда.* Моля, използвай менюто /start ✨")
     else:
-        reply = ask_gpt(message.text)
+        reply = ask_gpt(text)
         bot.send_message(message.chat.id, reply)
 
 # Webhook обработка
