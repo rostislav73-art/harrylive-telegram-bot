@@ -17,10 +17,16 @@ WEBHOOK_URL = "https://web-production-f7800.up.railway.app/webhook"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode='Markdown')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-user_context = {}  # чат_id -> списък със съобщения
+user_context = {}
 
-wiki_bg = wikipediaapi.Wikipedia('bg')
-wiki_en = wikipediaapi.Wikipedia('en')
+wiki_bg = wikipediaapi.Wikipedia(
+    user_agent="Harrylive_73Bot/1.0 (https://t.me/Harrylive_73Bot)",
+    language='bg'
+)
+wiki_en = wikipediaapi.Wikipedia(
+    user_agent="Harrylive_73Bot/1.0 (https://t.me/Harrylive_73Bot)",
+    language='en'
+)
 
 def detect_language(text):
     if re.search(r'[а-яА-Я]', text):
@@ -137,7 +143,6 @@ def echo_all(message):
 
     lowered = text.lower()
 
-    # Засичане на въпрос за времето
     if "времето в" in lowered:
         try:
             city = lowered.split("времето в", 1)[1].strip().rstrip("?.,!")
@@ -148,14 +153,12 @@ def echo_all(message):
             bot.send_message(chat_id, "⚠️ *Моля, задай въпроса отново по правилен начин!*")
         return
 
-    # Търсене в Wikipedia при определени въпроси
     if lowered.startswith(("кой е", "какво е", "кога е", "къде е", "who is", "what is", "when is", "where is")):
         wiki_info = search_wikipedia(text)
         if wiki_info:
             bot.send_message(chat_id, wiki_info)
             return
 
-    # Засичане на "Хари"
     if "хари" in lowered:
         if "какво правиш" in lowered:
             bot.send_message(chat_id, "🤖 Работя неуморно, за да ти помагам! Какво ще пожелаеш?")
@@ -167,7 +170,6 @@ def echo_all(message):
             bot.send_message(chat_id, "👋 Здравей! Какво мога да направя за теб?")
         return
 
-    # Ако нищо специално, пращаме към GPT
     reply = ask_gpt(chat_id, text)
     bot.send_message(chat_id, reply)
 
