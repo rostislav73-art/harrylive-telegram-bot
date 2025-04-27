@@ -43,45 +43,45 @@ def search_wikipedia(query):
         summary = page.summary
         if len(summary) > 500:
             summary = summary[:500] + "..."
-        return f"📚 *Информация от Wikipedia:*\n\n{summary}"
+        return f"\ud83d\udcda *\u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043e\u0442 Wikipedia:*\n\n{summary}"
     else:
         return None
 
 def get_weather(city="Sofia"):
     if not city.strip():
-        return "⚠️ *Моля, въведи валидно име на град!*"
+        return "\u26a0\ufe0f *\u041c\u043e\u043b\u044f, \u0432\u044a\u0432\u0435\u0434\u0438 \u0432\u0430\u043b\u0438\u0434\u043d\u043e \u0438\u043c\u0435 \u043d\u0430 \u0433\u0440\u0430\u0434!*"
     url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={OPENWEATHER_API_KEY}&contentType=json"
     try:
         res = requests.get(url)
         if res.status_code != 200:
             print("Weather API error:", res.text)
-            return "⚠️ *Грешка при вземане на прогнозата за времето.*"
+            return "\u26a0\ufe0f *\u0413\u0440\u0435\u0448\u043a\u0430 \u043f\u0440\u0438 \u0432\u0437\u0435\u043c\u0430\u043d\u0435 \u043d\u0430 \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0430\u0442\u0430 \u0437\u0430 \u0432\u0440\u0435\u043c\u0435\u0442\u043e.*"
         data = res.json()
         if "days" not in data:
-            return "⚠️ *Няма прогноза за това място.*"
+            return "\u26a0\ufe0f *\u041d\u044f\u043c\u0430 \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0430 \u0437\u0430 \u0442\u043e\u0432\u0430 \u043c\u044f\u0441\u0442\u043e.*"
         day = data["days"][0]
         temp = day.get("temp")
         conditions = day.get("conditions", "").lower()
         humidity = day.get("humidity")
 
         icons = {
-            "rain": "🌧️", "overcast": "☁️", "cloud": "☁️",
-            "clear": "☀️", "snow": "❄️", "thunderstorm": "⛈️"
+            "rain": "\ud83c\udf27\ufe0f", "overcast": "\u2601\ufe0f", "cloud": "\u2601\ufe0f",
+            "clear": "\u2600\ufe0f", "snow": "\u2744\ufe0f", "thunderstorm": "\u26c8\ufe0f"
         }
-        weather_icon = "🌡️"
+        weather_icon = "\ud83c\udf21\ufe0f"
         for key, icon in icons.items():
             if key in conditions:
                 weather_icon = icon
                 break
 
-        return f"{weather_icon} *В момента в {city} е {temp}°C с {conditions}.*\n💧 Влажност: {humidity}%"
+        return f"{weather_icon} *\u0412 \u043c\u043e\u043c\u0435\u043d\u0442\u0430 \u0432 {city} \u0435 {temp}\u00b0C \u0441 {conditions}.*\n\ud83d\udca7 \u0412\u043b\u0430\u0436\u043d\u043e\u0441\u0442: {humidity}%"
     except Exception as e:
         print("Weather API exception:", e)
-        return "⚠️ *Възникна грешка при връзката с прогнозата.*"
+        return "\u26a0\ufe0f *\u0412\u044a\u0437\u043d\u0438\u043a\u043d\u0430 \u0433\u0440\u0435\u0448\u043a\u0430 \u043f\u0440\u0438 \u0432\u0440\u044a\u0437\u043a\u0430\u0442\u0430 \u0441 \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0430\u0442\u0430.*"
 
 def ask_gpt(chat_id, message_text):
     if not message_text.strip():
-        return "⚠️ *Моля, въведи съобщение!*"
+        return "\u26a0\ufe0f *\u041c\u043e\u043b\u044f, \u0432\u044a\u0432\u0435\u0434\u0438 \u0441\u044a\u043e\u0431\u0449\u0435\u043d\u0438\u0435!*"
     try:
         history = user_context.get(chat_id, [])
         history.append({"role": "user", "content": message_text})
@@ -90,7 +90,7 @@ def ask_gpt(chat_id, message_text):
         response = client.chat.completions.create(
             model="gpt-4-turbo-2024-04-09",
             messages=[
-                {"role": "system", "content": "Ти си Telegram бот. Днес е април 2025 година. Отговаряй максимално полезно и актуално."}
+                {"role": "system", "content": "\u0422\u0438 \u0441\u0438 Telegram \u0431\u043e\u0442. \u0414\u043d\u0435\u0441 \u0435 \u0430\u043f\u0440\u0438\u043b 2025 \u0433\u043e\u0434\u0438\u043d\u0430. \u041e\u0442\u0433\u043e\u0432\u0430\u0440\u044f\u0439 \u043c\u0430\u043a\u0441\u0438\u043c\u0430\u043b\u043d\u043e \u043f\u043e\u043b\u0435\u0437\u043d\u043e \u0438 \u0430\u043a\u0442\u0443\u0430\u043b\u043d\u043e."}
             ] + history,
             temperature=0.7,
             max_tokens=1500,
@@ -102,105 +102,6 @@ def ask_gpt(chat_id, message_text):
         return reply_text
     except Exception as e:
         print("OpenAI error:", e)
-        return "⚠️ *Възникна грешка при връзката с GPT.*"
-
-@bot.message_handler(commands=['start'])
-def start_handler(message):
-    markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("🌦️ Попитай за времето", callback_data="weather"))
-    markup.add(InlineKeyboardButton("💬 Говори с GPT", callback_data="chatgpt"))
-    markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
-    bot.send_message(message.chat.id, "🌍 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
-
-@bot.callback_query_handler(func=lambda call: True)
-def callback_query(call):
-    chat_id = call.message.chat.id
-    if call.data == "weather":
-        user_context[chat_id] = {"state": "awaiting_city"}
-        bot.send_message(chat_id, "✍️ *Напиши името на града, за да ти дам прогноза!*")
-    elif call.data == "chatgpt":
-        user_context[chat_id] = []
-        bot.send_message(chat_id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
-    elif call.data == "help":
-        bot.send_message(chat_id, "ℹ️ *Инструкции:*
-
-🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.
-💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.
-
-✨ *Просто напиши какво те интересува!* ✍️")
-
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    chat_id = message.chat.id
-    text = message.text.strip()
-
-    if text.startswith("/"):
-        bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
-        return
-
-    context = user_context.get(chat_id)
-
-    if isinstance(context, dict) and context.get("state") == "awaiting_city":
-        reply = get_weather(text)
-        bot.send_message(chat_id, reply)
-        user_context[chat_id] = []
-        return
-
-    lowered = text.lower()
-
-    if "времето в" in lowered:
-        try:
-            city = lowered.split("времето в", 1)[1].strip().rstrip("?.,!")
-            reply = get_weather(city)
-            bot.send_message(chat_id, reply)
-        except Exception as e:
-            print("City parse error:", e)
-            bot.send_message(chat_id, "⚠️ *Моля, задай въпроса отново по правилен начин!*")
-        return
-
-    if lowered.startswith(("кой е", "какво е", "кога е", "къде е", "who is", "what is", "when is", "where is")):
-        wiki_info = search_wikipedia(text)
-        if wiki_info:
-            bot.send_message(chat_id, wiki_info)
-            return
-
-    if "хари" in lowered:
-        if "какво правиш" in lowered:
-            bot.send_message(chat_id, "🤖 Работя неуморно, за да ти помагам! Какво ще пожелаеш?")
-        elif "къде си" in lowered:
-            bot.send_message(chat_id, "📍 В дигиталния свят съм, винаги до теб! Какво мога да направя?")
-        elif "кой си" in lowered:
-            bot.send_message(chat_id, "👋 Аз съм Хари — твоят Telegram помощник, свързан с GPT-4! 🚀")
-        else:
-            bot.send_message(chat_id, "👋 Здравей! Какво мога да направя за теб?")
-        return
-
-    reply = ask_gpt(chat_id, text)
-    bot.send_message(chat_id, reply)
-
-@app.route("/webhook", methods=["POST"])
-def telegram_webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-    return {'ok': True}
-
-@app.route("/")
-def index():
-    return "🤖 Bot is live! Use /webhook for Telegram updates."
-
-import requests as rq
-
-def set_webhook():
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}"
-    try:
-        res = rq.get(url)
-        print("Webhook set:", res.json())
-    except Exception as e:
-        print("Failed to set webhook:", e)
-
-set_webhook()
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        return "\u26a0\ufe0f *\u0412\u044a\u0437\u043d\u0438\u043a\u043d\u0430 \u0433\u0440\u0435\u0448\u043a\u0430 \u043f\u0440\u0438 \u0432\u0440\u044a\u0437\u043a\u0430\u0442\u0430 \u0441 GPT.*"
+...
+# (Пълното продължение следва веднага ако искаш)
