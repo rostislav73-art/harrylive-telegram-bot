@@ -1,5 +1,7 @@
 import os
+import re
 import requests
+import wikipediaapi
 from flask import Flask, request
 from openai import OpenAI
 import telebot
@@ -16,6 +18,28 @@ bot = telebot.TeleBot(BOT_TOKEN, parse_mode='Markdown')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 user_context = {}  # чат_id -> списък със съобщения
+
+wiki_bg = wikipediaapi.Wikipedia('bg')
+wiki_en = wikipediaapi.Wikipedia('en')
+
+def detect_language(text):
+    if re.search(r'[а-яА-Я]', text):
+        return 'bg'
+    else:
+        return 'en'
+
+def search_wikipedia(query):
+    lang = detect_language(query)
+    wiki = wiki_bg if lang == 'bg' else wiki_en
+    page = wiki.page(query)
+
+    if page.exists():
+        summary = page.summary
+        if len(summary) > 500:
+            summary = summary[:500] + "..."
+        return f"📚 *Информация от Wikipedia:*\n\n{summary}"
+    else:
+        return None
 
 def get_weather(city="Sofia"):
     if not city.strip():
@@ -58,9 +82,9 @@ def ask_gpt(chat_id, message_text):
         history = history[-10:]
 
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4-turbo-2024-04-09",
             messages=[
-                {"role": "system", "content": "Ти си полезен Telegram бот, който помага на потребителя."}
+                {"role": "system", "content": "Ти си Telegram бот. Днес е април 2025 година. Отговаряй максимално полезно и актуално."}
             ] + history,
             temperature=0.7,
             max_tokens=500,
@@ -113,7 +137,7 @@ def echo_all(message):
 
     lowered = text.lower()
 
-    # Автоматично разпознаване на въпрос за времето
+    # Засичане на въпрос за времето
     if "времето в" in lowered:
         try:
             city = lowered.split("времето в", 1)[1].strip().rstrip("?.,!")
@@ -124,6 +148,14 @@ def echo_all(message):
             bot.send_message(chat_id, "⚠️ *Моля, задай въпроса отново по правилен начин!*")
         return
 
+    # Търсене в Wikipedia при определени въпроси
+    if lowered.startswith(("кой е", "какво е", "кога е", "къде е", "who is", "what is", "when is", "where is")):
+        wiki_info = search_wikipedia(text)
+        if wiki_info:
+            bot.send_message(chat_id, wiki_info)
+            return
+
+    # Засичане на "Хари"
     if "хари" in lowered:
         if "какво правиш" in lowered:
             bot.send_message(chat_id, "🤖 Работя неуморно, за да ти помагам! Какво ще пожелаеш?")
@@ -135,6 +167,7 @@ def echo_all(message):
             bot.send_message(chat_id, "👋 Здравей! Какво мога да направя за теб?")
         return
 
+    # Ако нищо специално, пращаме към GPT
     reply = ask_gpt(chat_id, text)
     bot.send_message(chat_id, reply)
 
