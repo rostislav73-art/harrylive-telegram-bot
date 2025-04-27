@@ -43,9 +43,7 @@ def search_wikipedia(query):
         summary = page.summary
         if len(summary) > 500:
             summary = summary[:500] + "..."
-        return f"📚 *Информация от Wikipedia:*
-
-{summary}"
+        return f"📚 *Информация от Wikipedia:*\n\n{summary}"
     else:
         return None
 
