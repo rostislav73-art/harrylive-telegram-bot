@@ -124,6 +124,11 @@ def start_handler(message):
     markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
     bot.send_message(message.chat.id, "🌍 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
 
+@bot.message_handler(func=lambda message: message.text and message.text.startswith("/") and message.text.lower() not in ("/start", "/help"))
+def handle_unknown_command(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     chat_id = call.message.chat.id
@@ -140,10 +145,6 @@ def callback_query(call):
 def echo_all(message):
     chat_id = message.chat.id
     text = message.text.strip()
-
-    if text.startswith("/") and text.lower() not in ("/start", "/help"):
-        bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
-        return
 
     context = user_context.get(chat_id, [])
 
