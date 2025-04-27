@@ -45,7 +45,6 @@ def search_wikipedia(query, chat_id=None):
             summary = summary[:500] + "..."
         return f"📚 *Информация от Wikipedia:*\n\n{summary}"
     else:
-        # Ако няма Wikipedia резултат ➔ пита GPT
         if chat_id:
             try:
                 bot.send_chat_action(chat_id, 'typing')
@@ -142,7 +141,7 @@ def echo_all(message):
     chat_id = message.chat.id
     text = message.text.strip()
 
-    if text.startswith("/"):
+    if text.startswith("/") and text.lower() not in ("/start", "/help"):
         bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
         return
 
