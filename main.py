@@ -43,7 +43,9 @@ def search_wikipedia(query):
         summary = page.summary
         if len(summary) > 500:
             summary = summary[:500] + "..."
-        return f"📚 *Информация от Wikipedia:*\n\n{summary}"
+        return f"📚 *Информация от Wikipedia:*
+
+{summary}"
     else:
         return None
 
@@ -93,7 +95,7 @@ def ask_gpt(chat_id, message_text):
                 {"role": "system", "content": "Ти си Telegram бот. Днес е април 2025 година. Отговаряй максимално полезно и актуално."}
             ] + history,
             temperature=0.7,
-            max_tokens=500,
+            max_tokens=1500,
         )
 
         reply_text = response.choices[0].message.content
@@ -122,7 +124,12 @@ def callback_query(call):
         user_context[chat_id] = []
         bot.send_message(chat_id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
-        bot.send_message(chat_id, "ℹ️ *Инструкции:*\n\n🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.\n💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.\n\n✨ *Просто напиши какво те интересува!* ✍️")
+        bot.send_message(chat_id, "ℹ️ *Инструкции:*
+
+🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.
+💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.
+
+✨ *Просто напиши какво те интересува!* ✍️")
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
