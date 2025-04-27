@@ -83,6 +83,8 @@ def ask_gpt(chat_id, message_text):
     if not message_text.strip():
         return "⚠️ *Моля, въведи съобщение!*"
     try:
+        bot.send_chat_action(chat_id, 'typing')  # 🔥 Показва typing
+
         history = user_context.get(chat_id, [])
         history.append({"role": "user", "content": message_text})
         history = history[-10:]
@@ -136,6 +138,7 @@ def echo_all(message):
     context = user_context.get(chat_id, [])
 
     if context and context[0]["content"] == "awaiting_city":
+        bot.send_chat_action(chat_id, 'typing')  # 🔥
         reply = get_weather(text)
         bot.send_message(chat_id, reply)
         user_context[chat_id] = []
@@ -145,6 +148,7 @@ def echo_all(message):
 
     if "времето в" in lowered:
         try:
+            bot.send_chat_action(chat_id, 'typing')  # 🔥
             city = lowered.split("времето в", 1)[1].strip().rstrip("?.,!")
             reply = get_weather(city)
             bot.send_message(chat_id, reply)
@@ -154,12 +158,14 @@ def echo_all(message):
         return
 
     if lowered.startswith(("кой е", "какво е", "кога е", "къде е", "who is", "what is", "when is", "where is")):
+        bot.send_chat_action(chat_id, 'typing')  # 🔥
         wiki_info = search_wikipedia(text)
         if wiki_info:
             bot.send_message(chat_id, wiki_info)
             return
 
     if "хари" in lowered:
+        bot.send_chat_action(chat_id, 'typing')  # 🔥
         if "какво правиш" in lowered:
             bot.send_message(chat_id, "🤖 Работя неуморно, за да ти помагам! Какво ще пожелаеш?")
         elif "къде си" in lowered:
@@ -170,6 +176,7 @@ def echo_all(message):
             bot.send_message(chat_id, "👋 Здравей! Какво мога да направя за теб?")
         return
 
+    bot.send_chat_action(chat_id, 'typing')  # 🔥
     reply = ask_gpt(chat_id, text)
     bot.send_message(chat_id, reply)
 
@@ -187,15 +194,19 @@ def index():
 
 import requests as rq
 
-def set_webhook():
+@app.route("/setwebhook", methods=["GET"])
+def setwebhook_route():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}"
     try:
         res = rq.get(url)
-        print("Webhook set:", res.json())
+        if res.status_code == 200 and res.json().get('ok'):
+            return "✅ Webhook успешно е настроен!", 200
+        else:
+            print("Webhook error:", res.text)
+            return "❌ Неуспех при настройка на webhook.", 500
     except Exception as e:
-        print("Failed to set webhook:", e)
-
-set_webhook()
+        print("Webhook exception:", e)
+        return "❌ Грешка при настройка на webhook.", 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
