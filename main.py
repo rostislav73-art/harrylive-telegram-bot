@@ -43,18 +43,18 @@ def search_wikipedia(query, chat_id=None):
         summary = page.summary
         if len(summary) > 500:
             summary = summary[:500] + "..."
-        return f"📚 *Информация от Wikipedia:*
+        return f"""📚 *Информация от Wikipedia:*
 
-{summary}"
+{summary}"""
     else:
         if chat_id:
             try:
                 bot.send_chat_action(chat_id, 'typing')
                 prompt = f"Обясни кратко и ясно: {query}"
                 gpt_reply = ask_gpt(chat_id, prompt)
-                return f"🤖 *Информация чрез GPT:*
+                return f"""🤖 *Информация чрез GPT:*
 
-{gpt_reply}"
+{gpt_reply}"""
             except Exception as e:
                 print("GPT fallback error:", e)
                 return "⚠️ *Няма налична информация в момента.*"
@@ -138,22 +138,21 @@ def callback_query(call):
         user_context[chat_id] = []
         bot.send_message(chat_id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
-        bot.send_message(chat_id, "ℹ️ *Инструкции:*
+        bot.send_message(chat_id, """ℹ️ *Инструкции:*
 
 🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.
 💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.
 
-✨ *Просто напиши какво те интересува!* ✍️")
+✨ *Просто напиши какво те интересува!* ✍️""")
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     chat_id = message.chat.id
     text = message.text.strip()
 
-    if text.startswith("/"):
-        if text.lower() not in ("/start", "/help"):
-            bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
-            return
+    if text.startswith("/") and text.lower() not in ("/start", "/help"):
+        bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
+        return
 
     context = user_context.get(chat_id, [])
 
