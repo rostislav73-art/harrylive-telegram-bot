@@ -43,14 +43,18 @@ def search_wikipedia(query, chat_id=None):
         summary = page.summary
         if len(summary) > 500:
             summary = summary[:500] + "..."
-        return f"📚 *Информация от Wikipedia:*\n\n{summary}"
+        return f"📚 *Информация от Wikipedia:*
+
+{summary}"
     else:
         if chat_id:
             try:
                 bot.send_chat_action(chat_id, 'typing')
                 prompt = f"Обясни кратко и ясно: {query}"
                 gpt_reply = ask_gpt(chat_id, prompt)
-                return f"🤖 *Информация чрез GPT:*\n\n{gpt_reply}"
+                return f"🤖 *Информация чрез GPT:*
+
+{gpt_reply}"
             except Exception as e:
                 print("GPT fallback error:", e)
                 return "⚠️ *Няма налична информация в момента.*"
@@ -124,11 +128,6 @@ def start_handler(message):
     markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
     bot.send_message(message.chat.id, "🌍 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
 
-@bot.message_handler(func=lambda message: message.text and message.text.startswith("/") and message.text.lower() not in ("/start", "/help"))
-def handle_unknown_command(message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
-
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     chat_id = call.message.chat.id
@@ -139,12 +138,22 @@ def callback_query(call):
         user_context[chat_id] = []
         bot.send_message(chat_id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
-        bot.send_message(chat_id, "ℹ️ *Инструкции:*\n\n🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.\n💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.\n\n✨ *Просто напиши какво те интересува!* ✍️")
+        bot.send_message(chat_id, "ℹ️ *Инструкции:*
+
+🌦️ Натисни 'Попитай за времето' и напиши град за прогноза.
+💬 Натисни 'Говори с GPT', за да ми зададеш въпрос.
+
+✨ *Просто напиши какво те интересува!* ✍️")
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     chat_id = message.chat.id
     text = message.text.strip()
+
+    if text.startswith("/"):
+        if text.lower() not in ("/start", "/help"):
+            bot.send_message(chat_id, "❓ *Неразпозната команда. Използвай менюто /start ✨")
+            return
 
     context = user_context.get(chat_id, [])
 
