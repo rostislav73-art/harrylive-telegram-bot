@@ -18,7 +18,7 @@ bot = telebot.TeleBot(BOT_TOKEN, parse_mode='Markdown')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 user_context = {}
-GROUP_CHAT_ID = -1001234567890  # <-- смени с реалното ID на групата
+GROUP_CHAT_ID = -4716774423  # <-- смени с реалното ID на групата
 
 wiki_bg = wikipediaapi.Wikipedia(
     user_agent="Harrylive_73Bot/1.0 (https://t.me/Harrylive_73Bot)",
