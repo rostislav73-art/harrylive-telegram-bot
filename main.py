@@ -18,6 +18,7 @@ bot = telebot.TeleBot(BOT_TOKEN, parse_mode='Markdown')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 user_context = {}
+GROUP_CHAT_ID = -1001234567890  # <-- смени с реалното ID на групата
 
 wiki_bg = wikipediaapi.Wikipedia(
     user_agent="Harrylive_73Bot/1.0 (https://t.me/Harrylive_73Bot)",
@@ -28,11 +29,18 @@ wiki_en = wikipediaapi.Wikipedia(
     language='en'
 )
 
+@bot.message_handler(commands=['getchatid'])
+def get_chat_id(message):
+    bot.reply_to(message, f"🆔 Chat ID: `{message.chat.id}`")
+
 def detect_language(text):
     if re.search(r'[а-яА-Я]', text):
         return 'bg'
     else:
         return 'en'
+
+... (останалата част от кода остава същата)
+
 
 def search_wikipedia(query):
     lang = detect_language(query)
