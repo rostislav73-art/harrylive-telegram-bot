@@ -39,9 +39,6 @@ def detect_language(text):
     else:
         return 'en'
 
-... (останалата част от кода остава същата)
-
-
 def search_wikipedia(query):
     lang = detect_language(query)
     wiki = wiki_bg if lang == 'bg' else wiki_en
@@ -51,45 +48,45 @@ def search_wikipedia(query):
         summary = page.summary
         if len(summary) > 500:
             summary = summary[:500] + "..."
-        return f"\ud83d\udcda *\u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043e\u0442 Wikipedia:*\n\n{summary}"
+        return f"📚 *Информация от Wikipedia:*\n\n{summary}"
     else:
         return None
 
 def get_weather(city="Sofia"):
     if not city.strip():
-        return "\u26a0\ufe0f *\u041c\u043e\u043b\u044f, \u0432\u044a\u0432\u0435\u0434\u0438 \u0432\u0430\u043b\u0438\u0434\u043d\u043e \u0438\u043c\u0435 \u043d\u0430 \u0433\u0440\u0430\u0434!*"
+        return "⚠️ *Моля, въведи валидно име на град!*"
     url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?unitGroup=metric&lang=bg&key={OPENWEATHER_API_KEY}&contentType=json"
     try:
         res = requests.get(url)
         if res.status_code != 200:
             print("Weather API error:", res.text)
-            return "\u26a0\ufe0f *\u0413\u0440\u0435\u0448\u043a\u0430 \u043f\u0440\u0438 \u0432\u0437\u0435\u043c\u0430\u043d\u0435 \u043d\u0430 \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0430\u0442\u0430 \u0437\u0430 \u0432\u0440\u0435\u043c\u0435\u0442\u043e.*"
+            return "⚠️ *Грешка при вземане на прогнозата за времето.*"
         data = res.json()
         if "days" not in data:
-            return "\u26a0\ufe0f *\u041d\u044f\u043c\u0430 \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0430 \u0437\u0430 \u0442\u043e\u0432\u0430 \u043c\u044f\u0441\u0442\u043e.*"
+            return "⚠️ *Няма прогноза за това място.*"
         day = data["days"][0]
         temp = day.get("temp")
         conditions = day.get("conditions", "").lower()
         humidity = day.get("humidity")
 
         icons = {
-            "rain": "\ud83c\udf27\ufe0f", "overcast": "\u2601\ufe0f", "cloud": "\u2601\ufe0f",
-            "clear": "\u2600\ufe0f", "snow": "\u2744\ufe0f", "thunderstorm": "\u26c8\ufe0f"
+            "rain": "🌧️", "overcast": "☁️", "cloud": "☁️",
+            "clear": "☀️", "snow": "❄️", "thunderstorm": "⛈️"
         }
-        weather_icon = "\ud83c\udf21\ufe0f"
+        weather_icon = "🌡️"
         for key, icon in icons.items():
             if key in conditions:
                 weather_icon = icon
                 break
 
-        return f"{weather_icon} *\u0412 \u043c\u043e\u043c\u0435\u043d\u0442\u0430 \u0432 {city} \u0435 {temp}\u00b0C \u0441 {conditions}.*\n\ud83d\udca7 \u0412\u043b\u0430\u0436\u043d\u043e\u0441\u0442: {humidity}%"
+        return f"{weather_icon} *В момента в {city} е {temp}°C с {conditions}.*\n💧 Влажност: {humidity}%"
     except Exception as e:
         print("Weather API exception:", e)
-        return "\u26a0\ufe0f *\u0412\u044a\u0437\u043d\u0438\u043a\u043d\u0430 \u0433\u0440\u0435\u0448\u043a\u0430 \u043f\u0440\u0438 \u0432\u0440\u044a\u0437\u043a\u0430\u0442\u0430 \u0441 \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0430\u0442\u0430.*"
+        return "⚠️ *Възникна грешка при връзката с прогнозата.*"
 
 def ask_gpt(chat_id, message_text):
     if not message_text.strip():
-        return "\u26a0\ufe0f *\u041c\u043e\u043b\u044f, \u0432\u044a\u0432\u0435\u0434\u0438 \u0441\u044a\u043e\u0431\u0449\u0435\u043d\u0438\u0435!*"
+        return "⚠️ *Моля, въведи съобщение!*"
     try:
         history = user_context.get(chat_id, [])
         history.append({"role": "user", "content": message_text})
@@ -98,7 +95,7 @@ def ask_gpt(chat_id, message_text):
         response = client.chat.completions.create(
             model="gpt-4-turbo-2024-04-09",
             messages=[
-                {"role": "system", "content": "\u0422\u0438 \u0441\u0438 Telegram \u0431\u043e\u0442. \u0414\u043d\u0435\u0441 \u0435 \u0430\u043f\u0440\u0438\u043b 2025 \u0433\u043e\u0434\u0438\u043d\u0430. \u041e\u0442\u0433\u043e\u0432\u0430\u0440\u044f\u0439 \u043c\u0430\u043a\u0441\u0438\u043c\u0430\u043b\u043d\u043e \u043f\u043e\u043b\u0435\u0437\u043d\u043e \u0438 \u0430\u043a\u0442\u0443\u0430\u043b\u043d\u043e."}
+                {"role": "system", "content": "Ти си Telegram бот. Днес е април 2025 година. Отговаряй максимално полезно и актуално."}
             ] + history,
             temperature=0.7,
             max_tokens=1500,
@@ -110,27 +107,60 @@ def ask_gpt(chat_id, message_text):
         return reply_text
     except Exception as e:
         print("OpenAI error:", e)
-        return "\u26a0\ufe0f *\u0412\u044a\u0437\u043d\u0438\u043a\u043d\u0430 \u0433\u0440\u0435\u0448\u043a\u0430 \u043f\u0440\u0438 \u0432\u0440\u044a\u0437\u043a\u0430\u0442\u0430 \u0441 GPT.*"
+        return "⚠️ *Възникна грешка при връзката с GPT.*"
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("\ud83c\udf26\ufe0f \u041f\u043e\u043f\u0438\u0442\u0430\u0439 \u0437\u0430 \u0432\u0440\u0435\u043c\u0435\u0442\u043e", callback_data="weather"))
-    markup.add(InlineKeyboardButton("\ud83d\udcac \u0413\u043e\u0432\u043e\u0440\u0438 \u0441 GPT", callback_data="chatgpt"))
-    markup.add(InlineKeyboardButton("\u2139\ufe0f \u041f\u043e\u043c\u043e\u0449", callback_data="help"))
-    bot.send_message(message.chat.id, "\ud83c\udf0d *\u0414\u043e\u0431\u0440\u0435 \u0434\u043e\u0448\u044a\u043b! \u0418\u0437\u0431\u0435\u0440\u0438 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043e\u0442 \u043c\u0435\u043d\u044e\u0442\u043e:*", reply_markup=markup)
+    markup.add(InlineKeyboardButton("🌦️ Попитай за времето", callback_data="weather"))
+    markup.add(InlineKeyboardButton("💬 Говори с GPT", callback_data="chatgpt"))
+    markup.add(InlineKeyboardButton("ℹ️ Помощ", callback_data="help"))
+    bot.send_message(message.chat.id, "🌍 *Добре дошъл! Избери действие от менюто:*", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     chat_id = call.message.chat.id
     if call.data == "weather":
         user_context[chat_id] = [{"role": "system", "content": "awaiting_city"}]
-        bot.send_message(chat_id, "\u270d\ufe0f *\u041d\u0430\u043f\u0438\u0448\u0438 \u0438\u043c\u0435\u0442\u043e \u043d\u0430 \u0433\u0440\u0430\u0434\u0430, \u0437\u0430 \u0434\u0430 \u0442\u0438 \u0434\u0430\u043c \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0430!*")
+        bot.send_message(chat_id, "✍️ *Напиши името на града, за да ти дам прогноза!*")
     elif call.data == "chatgpt":
         user_context[chat_id] = []
-        bot.send_message(chat_id, "\ud83d\udcac *\u041f\u0438\u0448\u0438 \u043c\u0438 \u0432\u044a\u043f\u0440\u043e\u0441 \u0438 \u0449\u0435 \u0442\u0438 \u043e\u0442\u0433\u043e\u0432\u043e\u0440\u044f \u043a\u0430\u0442\u043e GPT-4!* \u2728")
+        bot.send_message(chat_id, "💬 *Пиши ми въпрос и ще ти отговоря като GPT-4!* ✨")
     elif call.data == "help":
-        bot.send_message(chat_id, "\u2139\ufe0f *\u0418\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0438\u0438:*\n\n\ud83c\udf26\ufe0f \u041d\u0430\u0442\u0438\u0441\u043d\u0438 'Попитай за времето', за да получиш прогноза.\n\ud83d\udcac \u041d\u0430\u0442\u0438\u0441\u043d\u0438 'Говори с GPT', за да питаш AI въпроси.\n\ud83d\udcda \u0418\u043b\u0438 \u043f\u0440\u043e\u0441\u0442\u043e \u0438\u0437\u043f\u0440\u0430\u0442\u0438 \u0434\u0443\u043c\u0430 \u0437\u0430 \u0442\u044a\u0440\u0441\u0435\u043d\u0435 \u0432 Wikipedia!")
+        bot.send_message(chat_id, "ℹ️ *Инструкции:*\n\n🌦️ Натисни 'Попитай за времето', за да получиш прогноза.\n💬 Натисни 'Говори с GPT', за да питаш AI въпроси.\n📚 Или просто изпрати дума за търсене в Wikipedia!")
+
+@bot.message_handler(commands=['post'])
+def gpt_direct_post(message):
+    if message.chat.type != 'private':
+        bot.reply_to(message, "❌ Използвай тази команда само в личен чат.")
+        return
+
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        bot.reply_to(message, "⚠️ Моля, напиши тема! Пример: `/post здраве`")
+        return
+
+    topic = parts[1].strip()
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-turbo-2024-04-09",
+            messages=[
+                {"role": "system", "content": "Ти си креативен писател на постове за социални мрежи. Пиши позитивен, вдъхновяващ пост на български за зададена тема. Постът трябва да е кратък, мотивиращ и с емотикони."},
+                {"role": "user", "content": f"Напиши пост на тема: {topic}"}
+            ],
+            temperature=0.8,
+            max_tokens=300,
+        )
+
+        post_text = response.choices[0].message.content.strip()
+
+        bot.send_message(GROUP_CHAT_ID, post_text, parse_mode='Markdown')
+        bot.reply_to(message, "✅ Постът е генериран и публикуван директно в групата!")
+
+    except Exception as e:
+        print("GPT Post Error:", e)
+        bot.reply_to(message, "⚠️ Възникна грешка при публикуване.")
 
 @bot.message_handler(func=lambda message: True)
 def text_handler(message):
@@ -145,7 +175,7 @@ def text_handler(message):
     else:
         reply = ask_gpt(chat_id, message.text)
         if reply is None:
-            reply = search_wikipedia(message.text) or "\u2753 *\u041d\u0435 \u0443\u0441\u043f\u044f\u0445 \u0434\u0430 \u043d\u0430\u043c\u0435\u0440\u044f \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f.*"
+            reply = search_wikipedia(message.text) or "❓ *Не успях да намеря информация.*"
         bot.send_message(chat_id, reply)
 
 @app.route('/webhook', methods=['POST'])
